@@ -1,32 +1,58 @@
-import { expect, test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
-test('should start challenge and display sucess message', async ({ page }) => {
-    await page.goto('/');
-    await page.fill('input[name="name"]', 'Test user');
-    await page.fill('input[name="phone"]', '123456789');
-    await page.fill('input[name="email"]', 'email@example.com');
-    await page.click('button:has-text("Start Challenge")');
+test.describe('Candidate Form', () => {
+    test.beforeEach(async ({ page }) => {
+    
+        await page.goto('http://localhost:5173/');
+    });
 
+    test('Deve permitir que o usuário preencha e envie o formulário', async ({ page }) => {
+   
+        await page.fill('input[type="text"]', 'Carol');
+        await page.fill('input[type="tel"]', '1234567890');
+        await page.fill('input[type="email"]', 'carol@gmail.com');
+        
+     
+        await page.click('button:has-text("Start challenge")');
 
-    await page.waitForTimeout(1000); //espera um segundo
-    await page.click('button:has-text("Submit")');
+   
+        const timeLeft = await page.locator('h2').textContent();
+        expect(timeLeft).toContain('Time left:');
+    });
 
+    test('Deve abrir o modal ao enviar o desafio', async ({ page }) => {
+    
+        await page.fill('input[type="text"]', 'Carol');
+        await page.fill('input[type="tel"]', '1234567890');
+        await page.fill('input[type="email"]', 'carol@gmail.com');
+        
 
-    const modalText = await page.textContent('.modal-box');
-    expect(modalText).toContain('Challenge completed!');
-});
+        await page.click('button:has-text("Start challenge")');
 
-test('should start challenge and display sucess message', async ({ page }) => {
-    await page.goto('/');
-    await page.fill('input[name="name"]', 'Test user');
-    await page.fill('input[name="phone"]', '123456789');
-    await page.fill('input[name="email"]', 'email@example.com');
-    await page.click('button:has-text("Start Challenge")');
+        await page.waitForTimeout(10000); 
 
+  
+        await page.click('button:has-text("Submit")');
 
-    await page.waitForTimeout(16000); //espera 16 segundos
-    await page.click('button:has-text("Submit")');
+ 
+        const modal = await page.locator('h3');
+        await expect(modal).toBeVisible();
+        await expect(modal).toHaveText('Challenge completed!');
+    });
 
-    const modalText = await page.textContent('.modal-box');
-    expect(modalText).toContain('Challenge failed!');
+    test('Deve navegar para a página de informações do candidato', async ({ page }) => {
+   
+        await page.fill('input[type="text"]', 'Carol');
+        await page.fill('input[type="tel"]', '1234567890');
+        await page.fill('input[type="email"]', 'carol@gmail.com');
+        await page.click('button:has-text("Start challenge")');
+        await page.waitForTimeout(10000);
+        await page.click('button:has-text("Submit")');
+
+        await page.click('button:has-text("Back to your information")');
+
+       
+        const nameText = await page.locator('p:has-text("Name:")').textContent();
+        expect(nameText).toContain('Carol');
+    });
 });
